@@ -1,0 +1,4 @@
+node_modules/
+.env
+cdktf.out/
+.gen/
