@@ -261,7 +261,7 @@ export class PagamentoConstruct extends Construct {
       healthCheck: {
         enabled: true, // Enable health checks
         interval: 30, // The approximate amount of time, in seconds, between health checks of an individual target
-        path: "/produtos/lanche", // The destination for the HTTP request
+        path: "/healthcheck", // The destination for the HTTP request
         protocol: "HTTP", // The protocol to use to connect with the target
         timeout: 5, // The amount of time, in seconds, during which no response means a failed health check
         healthyThreshold: 5, // The number of consecutive health checks successes required before considering an unhealthy target healthy
