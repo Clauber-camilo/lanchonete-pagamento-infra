@@ -12,12 +12,10 @@ import { LbListener } from "@cdktf/provider-aws/lib/lb-listener";
 import { EcsCluster } from "@cdktf/provider-aws/lib/ecs-cluster";
 import { EcsTaskDefinition } from "@cdktf/provider-aws/lib/ecs-task-definition";
 import { EcsService } from "@cdktf/provider-aws/lib/ecs-service";
-import { DbSubnetGroup } from "@cdktf/provider-aws/lib/db-subnet-group";
-import { IamRole } from "@cdktf/provider-aws/lib/iam-role";
-import { IamRolePolicyAttachment } from "@cdktf/provider-aws/lib/iam-role-policy-attachment";
+// import { DbSubnetGroup } from "@cdktf/provider-aws/lib/db-subnet-group";
 import { CloudwatchLogGroup } from "@cdktf/provider-aws/lib/cloudwatch-log-group";
-import { DocdbCluster } from "@cdktf/provider-aws/lib/docdb-cluster";
-import { DocdbClusterInstance } from "@cdktf/provider-aws/lib/docdb-cluster-instance";
+// import { DocdbCluster } from "@cdktf/provider-aws/lib/docdb-cluster";
+// import { DocdbClusterInstance } from "@cdktf/provider-aws/lib/docdb-cluster-instance";
 
 export class PagamentoConstruct extends Construct {
   constructor(
@@ -99,94 +97,11 @@ export class PagamentoConstruct extends Construct {
       ],
     });
 
-    // Create a security group for the RDS instance
-    const rdsSecurityGroup = new SecurityGroup(this, "rdsSecurityGroup", {
-      vpcId: mainVpc.id,
-      ingress: [
-        //allow everything from main.sg
-        {
-          fromPort: 0,
-          toPort: 0,
-          protocol: "-1",
-          securityGroups: [mainSg.id],
-        },
-      ],
-      egress: [
-        //anywhere
-        {
-          fromPort: 0,
-          toPort: 0,
-          protocol: "-1",
-          securityGroups: [mainSg.id],
-        },
-      ],
-    });
-    // Create a DB subnet group
-    const dbSubnetGroup = new DbSubnetGroup(this, "dbSubnetGroup", {
-      name: prefix.concat("-db-subnet-group"),
-      subnetIds: [subnet1.id, subnet2.id, subnet3.id],
-    });
-
-    const cluster = new DocdbCluster(this, "MongoDBCluster", {
-      masterUsername: "admin",
-      masterPassword: "lanchonete-pagamento321",
-      backupRetentionPeriod: 5,
-      preferredBackupWindow: "07:00-09:00",
-      skipFinalSnapshot: true,
-      dbSubnetGroupName: dbSubnetGroup.name,
-      vpcSecurityGroupIds: [rdsSecurityGroup.id],
-      tags: { prefix },
-    });
-
-    const mongoInstance = new DocdbClusterInstance(this, "MongoDBInstance", {
-      identifier: "my-mongo-instance",
-      clusterIdentifier: cluster.id,
-      instanceClass: "db.r5.large",
-    });
-
-    const mongoURI = `mongodb://${mongoInstance.endpoint}:${mongoInstance.port}`;
-
-    // const dbInstance = new DbInstance(this, "dbInstance", {
-    //   engine: "postgres",
-    //   instanceClass: "db.t3.micro",
-    //   username: "postgres",
-    //   password: "psltest2024",
-    //   dbName: prefix.concat("db"),
-    //   dbSubnetGroupName: dbSubnetGroup.name,
-    //   allocatedStorage: 20,
-    //   port: 5432,
-    //   engineVersion: "16.1",
-    //   storageType: "gp2",
-    //   publiclyAccessible: true,
-    //   vpcSecurityGroupIds: [rdsSecurityGroup.id],
-    //   tags: { prefix },
-    // });
+    const mongoURI = process.env.MONGO_URI;
 
     // Create an ECS cluster
     const ecsCluster = new EcsCluster(this, "ecsCluster", {
       name: `${prefix}-cluster`,
-    });
-    // Create the execution role
-    const executionRole = new IamRole(this, "executionRole", {
-      name: `${prefix}-execution-role`,
-      assumeRolePolicy: Fn.jsonencode({
-        Version: "2012-10-17",
-        Statement: [
-          {
-            Effect: "Allow",
-            Principal: { Service: "ecs-tasks.amazonaws.com" },
-            Action: "sts:AssumeRole",
-          },
-        ],
-      }),
-      tags: { prefix },
-    });
-
-    // Attach the necessary policies to the execution role
-    new IamRolePolicyAttachment(this, "executionRolePolicyAttachment", {
-      role: executionRole.name,
-      policyArn:
-        "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
     });
 
     // Create a CloudWatch log group
@@ -202,7 +117,7 @@ export class PagamentoConstruct extends Construct {
       cpu: "256",
       memory: "512",
       requiresCompatibilities: ["FARGATE"],
-      executionRoleArn: executionRole.arn,
+      executionRoleArn: "arn:aws:iam::199750725241:role/LabRole",
       containerDefinitions:
         containerDefinitions ||
         Fn.jsonencode([

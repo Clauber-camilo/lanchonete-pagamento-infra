@@ -19,7 +19,7 @@ class DevStack extends TerraformStack {
     new PagamentoConstruct(this, "lanchonete", {
       mainVpc: mainVpc,
       prefix: "pagamento",
-      dockerImage: "camiloclauber/pagamento:latest",
+      dockerImage: "camiloclauber/pagamento:main",
     });
   }
 }
